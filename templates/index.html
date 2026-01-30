@@ -11,7 +11,7 @@
         margin: 0;
         padding: 20px;
         display: flex;
-        justify_content: center;
+        align-items: center;
       }
       .container {
         width: 800px;
@@ -81,20 +81,18 @@
     </div>
 
     <script>
-      // FUNCTION: Fetch data from backend
       async function fetchEvents() {
         try {
           const response = await fetch("/events");
           const events = await response.json();
 
           const list = document.getElementById("event-list");
-          list.innerHTML = ""; // Clear current list
+          list.innerHTML = "";
 
           events.forEach((event) => {
             const li = document.createElement("li");
             li.className = "event-card";
 
-            // HTML for each event
             li.innerHTML = `
                         <span class="type-badge ${event.type}">${
               event.type
@@ -111,10 +109,8 @@
         }
       }
 
-      // 1. Load immediately on page open
       fetchEvents();
 
-      // 2. Refresh every 15 seconds (15000 milliseconds)
       setInterval(fetchEvents, 15000);
     </script>
   </body>
