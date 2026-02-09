@@ -1,3 +1,4 @@
+
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
 from datetime import datetime
@@ -6,24 +7,34 @@ import os
 
 app = Flask(__name__)
 
-
+# TODO: In production, move this URI to an environment variable (.env) for security.
 MONGO_URI = "mongodb+srv://ankushsarsswat2002_db_user:ankush123@cluster0.wfhnmn0.mongodb.net/?appName=Cluster0" 
 
+# Connect to MongoDB
+# We use MongoDB to store raw JSON payloads from GitHub without schema constraints
 client = MongoClient(MONGO_URI)
 db = client['techstax_db'] 
-collection = db['events']   
+collection = db['events']
+
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    """
+    Endpoint to receive GitHub Webhook events.
+    Handles 'Push' and 'Pull Request' (Merge) events.
+    """
     data = request.json
-    event_type = request.headers.get('X-GitHub-Event')
 
+    # Validate that payload exists.
     if not data:
         return jsonify({"msg": "No data received"}), 400
+    
+    # Identify the event type from headers.
+    event_type = request.headers.get('X-GitHub-Event')
 
     record = {}
 
-
+    # Handle PUSH Event.
     if event_type == 'push':
         author = data['pusher']['name']
         to_branch = data['ref'].split('/')[-1] 
@@ -40,7 +51,7 @@ def webhook():
             "message": msg
         }
 
-    
+    # Handle PULL_REQUEST Event (Check for Merge)
     elif event_type == 'pull_request':
         action = data['action']
         pr = data['pull_request']
@@ -49,7 +60,7 @@ def webhook():
         to_branch = pr['base']['ref']
         timestamp = parser.parse(pr['updated_at'])
 
-        
+        # Case A: Merge (Closed + Merged = True)
         if action == 'closed' and pr['merged'] == True:
             msg = f'"{author}" merged branch "{from_branch}" to "{to_branch}" on {timestamp.strftime("%d %B %Y - %I:%M %p UTC")}'
             record = {
@@ -61,7 +72,7 @@ def webhook():
                 "message": msg
             }
         
-        
+        # Case B: Standard PR Action (Opened/Edited/Reopened)
         elif action in ['opened', 'edited', 'reopened']:
             msg = f'"{author}" submitted a pull request from "{from_branch}" to "{to_branch}" on {timestamp.strftime("%d %B %Y - %I:%M %p UTC")}'
             record = {
@@ -73,7 +84,7 @@ def webhook():
                 "message": msg
             }
 
-    
+    # Save to Database if a valid record was created.
     if record:
         collection.insert_one(record)
         print(f" Saved Event: {record['message']}")
@@ -95,4 +106,5 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
+    #Running on port 50001 to avoid conflicts.
     app.run(debug=True, port=50001)
