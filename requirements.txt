@@ -2,3 +2,4 @@ Pymongo
 flask
 python-dateutil
 dnspython
+gunicorn
