@@ -1,4 +1,4 @@
-
+import certifi
 from flask import Flask, request, jsonify, render_template
 from pymongo import MongoClient
 from datetime import datetime
@@ -12,7 +12,7 @@ MONGO_URI = "mongodb+srv://ankushsarsswat2002_db_user:ankush123@cluster0.wfhnmn0
 
 # Connect to MongoDB
 # We use MongoDB to store raw JSON payloads from GitHub without schema constraints
-client = MongoClient(MONGO_URI)
+client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
 db = client['techstax_db'] 
 collection = db['events']
 
