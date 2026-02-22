@@ -12,24 +12,32 @@ MONGO_URI = "mongodb+srv://ankushsarsswat2002_db_user:ankush123@cluster0.wfhnmn0
 
 # Connect to MongoDB
 # We use MongoDB to store raw JSON payloads from GitHub without schema constraints
-client = MongoClient(MONGO_URI, tlsCAFile=certifi.where())
+client = MongoClient(MONGO_URI, tls=True, tlsAllowInvalidCertificates=True)
 db = client['techstax_db'] 
 collection = db['events']
 
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    """
-    Endpoint to receive GitHub Webhook events.
-    Handles 'Push' and 'Pull Request' (Merge) events.
-    """
+    
+    #Endpoint to receive GitHub Webhook events.
+    #Handles 'Push' and 'Pull Request' (Merge) events.
+    
     data = request.json
 
-    # Validate that payload exists.
+    # Validate that payload exists.------
     if not data:
         return jsonify({"msg": "No data received"}), 400
     
-    # Identify the event type from headers.
+
+    # Idempotancy for webhook-------
+    delivery_id = request.headers.get('X-Github-Delivery')
+
+    if collection.find_one({"delivery_id" : delivery_id}):
+        print(f"Duplicate webhooks Blocked : {delivery_id}")
+        return jsonify({"Reason" : "Duplicate Ignored"}), 200
+
+    # Identify the event type from headers.------
     event_type = request.headers.get('X-GitHub-Event')
 
     record = {}
@@ -86,6 +94,7 @@ def webhook():
 
     # Save to Database if a valid record was created.
     if record:
+        record['delivery_id'] = delivery_id
         collection.insert_one(record)
         print(f" Saved Event: {record['message']}")
     
