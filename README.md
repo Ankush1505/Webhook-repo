@@ -32,7 +32,7 @@ If you want to test this code on your own machine:
 1. **Clone the repo:**
 
    ```bash
-   git clone [https://github.com/Ankush1505/webhook-assignment.git](https://github.com/Ankush1505/webhook-assignment.git)
+   git clone [https://github.com/Ankush1505/webhook-assignment.git](https://github.com/Ankush1505/Webhook-repo.git)
    cd webhook-assignment
 
    ```
@@ -44,4 +44,3 @@ If you want to test this code on your own machine:
 
 Built by: ANKUSH
 
-Testing-Webhook
